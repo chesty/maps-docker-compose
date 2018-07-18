@@ -1,0 +1,187 @@
+version: '3.5'
+
+services:
+  postgres:
+    image: hammermc/nominatim-docker
+    restart: always
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    environment:
+      - POSTGRES_PASSWORD=supersecret
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - run:/run
+    tmpfs:
+      - /tmp
+
+  renderd-initdb:
+    image: hammermc/renderd-docker
+    restart: "no"
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_PASSWORD=supersecret
+      - OSM_PBF_URL=http://download.geofabrik.de/australia-oceania/australia-latest.osm.pbf
+      - OSM2PGSQLCACHE=20000 #20gigs used only during init
+      - REDOWNLOAD
+      - REINITDB
+      - http_proxy
+      - https_proxy
+    command: initdb
+    volumes:
+      - data:/data
+    tmpfs:
+      - /run
+      - /tmp
+
+  renderd:
+    image: hammermc/renderd-docker
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_PASSWORD=supersecret
+      - OSM_PBF_URL=http://download.geofabrik.de/australia-oceania/australia-latest.osm.pbf
+      - http_proxy
+      - https_proxy
+    command: renderd
+    volumes:
+      - data:/data
+    tmpfs:
+      - /run
+      - /tmp
+
+  renderd-apache:
+    image: hammermc/renderd-docker
+    restart: always
+    environment:
+      - http_proxy
+      - https_proxy
+    depends_on:
+      - renderd
+    command: apache2
+    volumes:
+      - data:/data
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 8000:80
+
+  osrm-backend:
+    image: osrm/osrm-backend
+    restart: always
+#    to run osrm-routed with different options to the default, use (eg)
+#   command: osrm-routed.sh su-exec osrm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
+    command: osrm-routed.sh
+    environment:
+      - http_proxy
+      - https_proxy
+      - NPROCS
+      - PROFILE
+    depends_on:
+      - postgres
+    volumes:
+      - data:/data
+      - ./osrm-backend/osrm-routed.sh:/usr/local/bin/osrm-routed.sh
+    tmpfs:
+      - /run
+      - /tmp
+
+  osrm-frontend:
+    image: osrm/osrm-frontend
+    restart: always
+    command: osrm-frontend.sh
+    environment:
+      - http_proxy
+      - https_proxy
+      - OSRM_BACKEND
+      - OSRM_CENTER
+      - OSRM_ZOOM
+      - OSRM_LANGUAGE
+      - OSRM_LABEL
+    depends_on:
+      - osrm-backend
+    volumes:
+      - data:/data
+      - ./osrm-frontend/osrm-frontend.sh:/usr/local/bin/osrm-frontend.sh
+      - ./osrm-frontend/leaflet_options.js:/src/src/leaflet_options.js
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 8001:9966
+
+  vroom:
+    image: hammermc/vroom-docker
+    environment:
+      - http_proxy
+      - https_proxy
+    restart: always
+    tmpfs:
+      - /run
+      - /tmp
+
+  nominatim-apache:
+    image: hammermc/nominatim-docker
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=supersecret
+      - http_proxy
+      - https_proxy
+    command: apache2
+    volumes:
+      - data:/data
+      - ./nominatim-apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
+      - ./nominatim-apache/local.php:/Nominatim/build/settings/local.php
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 8002:80
+    depends_on:
+      - nominatim-initdb
+
+# nominatim shares the /run directory with the postgres container
+# because it only connects to postgres via a socket during import
+  nominatim-initdb:
+    image: hammermc/nominatim-docker
+    restart: "no"
+    command: initdb
+    environment:
+      - POSTGRES_PASSWORD=supersecret
+      - OSM_PBF_URL=http://download.geofabrik.de/australia-oceania/australia-latest.osm.pbf
+      - OSM2PGSQLCACHE=20000 #20gigs used only during init
+      - REDOWNLOAD
+      - REINITDB
+      - http_proxy
+      - https_proxy
+    volumes:
+      - data:/data
+      - run:/run
+    tmpfs:
+      - /tmp
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx
+    restart: always
+    volumes:
+     - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    command: nginx -g 'daemon off;'
+    ports:
+     - 80:80
+    tmpfs:
+      - /tmp
+      - /run
+    depends_on:
+      - osrm-frontend
+      - osrm-backend
+      - nominatim-apache
+
+volumes:
+  data:
+  postgres-data:
+  run:
+  nominatim-build:
