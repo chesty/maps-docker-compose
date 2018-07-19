@@ -50,10 +50,10 @@ if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OS
 	if [ ! -d /data/"$PROFILE_DIR" ]; then
 		su-exec osrm mkdir -p /data/profile/"$PROFILE_DIR"
 	fi
-	cd /data/profile/"$PROFILE_DIR" && \
-		su-exec osrm osrm-extract -p "$PROFILE" -t "$NPROCS" /data/"$OSM_PBF" && \
+	su-exec osrm osrm-extract -p "$PROFILE" -t "$NPROCS" /data/"$OSM_PBF" && \
 		su-exec osrm osrm-partition "$OSM_OSRM" && \
-		su-exec osrm osrm-customize "$OSM_OSRM"
+		su-exec osrm osrm-customize "$OSM_OSRM" && \
+		mv /data/"$OSM_PBF".osrm* /data/profile/"$PROFILE_DIR"
 fi
 
 cd /
