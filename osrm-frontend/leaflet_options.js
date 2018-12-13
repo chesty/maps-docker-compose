@@ -2,7 +2,7 @@
 
 var L = require('leaflet');
 
-var streets = L.tileLayer('http://127.0.0.1:8000/osm_tiles/{z}/{x}/{y}.png', {}),
+var streets = L.tileLayer('http://renderd.internal.kkts.com.au/osm_tiles/{z}/{x}/{y}.png', {}),
   small_components = L.tileLayer('https://tools.geofabrik.de/osmi/tiles/routing_i/{z}/{x}/{y}.png', {});
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
   },
   services: [{
     label: 'Car (fastest)',
-    path: 'http://127.0.0.1:8000/osrm-backend/route/v1'
+    path: 'http://192.168.1.55:5000/route/v1'
   }],
   layer: [{
     'Mapbox Streets': streets

@@ -11,7 +11,7 @@ fi
 cd /src && \
 	chown -R osrm /src && \
 
-if [ "$@" ]; then
+if [ "$#" -gt 0 ]; then
 	exec "$@"
 fi
 

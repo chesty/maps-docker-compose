@@ -13,6 +13,8 @@ services:
       - run:/run
     tmpfs:
       - /tmp
+    ports:
+      - 5432:5432
 
   renderd-initdb:
     image: hammermc/renderd-docker
@@ -29,6 +31,7 @@ services:
     command: renderd-initdb
     volumes:
       - data:/data
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /run
       - /tmp
@@ -47,6 +50,7 @@ services:
     volumes:
       - data:/data
       - ./renderd/renderd.conf:/etc/renderd.conf
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /run
       - /tmp
@@ -66,12 +70,15 @@ services:
       - data:/data
       - ./renderd/renderd.conf:/etc/renderd.conf
       - ./renderd-apache/tileserver_site.conf:/etc/apache2/sites-available/tileserver_site.conf
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /run
       - /tmp
+    ports:
+      - 8082:80
 
   osrm-backend:
-    image: osrm/osrm-backend
+    image: hammermc/vroom-docker
     restart: always
 #    to run osrm-routed with different options to the default, use (eg)
 #   command: osrm-routed.sh su-exec osrm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
@@ -83,15 +90,22 @@ services:
       - https_proxy
       - NPROCS
       - PROFILE
+      - REDOWNLOAD
+      - REEXTRACT
     depends_on:
       - postgres
       - renderd
     volumes:
       - data:/data
       - ./osrm-backend/osrm-routed.sh:/usr/local/bin/osrm-routed.sh
+      - ./osrm-backend/opt/car.lua:/opt/car.lua
+      - ./osrm-backend/opt/lib:/opt/lib
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /run
       - /tmp
+    ports:
+      - 5000:5000
 
   osrm-frontend:
     image: osrm/osrm-frontend
@@ -112,7 +126,7 @@ services:
       - /run
       - /tmp
     ports:
-      - 8001:9966
+      - 5002:9966
 
   vroom:
     image: hammermc/vroom-docker
@@ -125,6 +139,8 @@ services:
     tmpfs:
       - /run
       - /tmp
+    ports:
+      - 3000:3000
 
   nominatim-apache:
     image: hammermc/nominatim-docker
@@ -134,25 +150,26 @@ services:
     environment:
       - http_proxy
       - https_proxy
-    command: apache2
+    command: nominatim-apache2
     volumes:
       - data:/data
+      - run:/run
       - ./nominatim-apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
       - ./nominatim-apache/local.php:/Nominatim/build/settings/local.php
     tmpfs:
-      - /run
       - /tmp
-    ports:
-      - 8002:80
     depends_on:
       - nominatim-initdb
+      - nominatim-updatedb
+    ports:
+      - 5003:80
 
 # nominatim shares the /run directory with the postgres container
 # because it only connects to postgres via a socket during import
   nominatim-initdb:
     image: hammermc/nominatim-docker
     restart: "no"
-    command: initdb
+    command: nominatim-initdb
     env_file:
       - osm.env
     environment:
@@ -160,6 +177,21 @@ services:
       - REINITDB
       - http_proxy
       - https_proxy
+    volumes:
+      - data:/data
+      - run:/run
+    tmpfs:
+      - /tmp
+    depends_on:
+      - postgres
+
+#  edit apache/local.php for correct update settings
+  nominatim-updatedb:
+    image: hammermc/nominatim-docker
+    restart: "no"
+    command: nominatim-updatedb
+    env_file:
+      - osm.env
     volumes:
       - data:/data
       - run:/run

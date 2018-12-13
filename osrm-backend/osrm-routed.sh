@@ -1,35 +1,47 @@
 #!/bin/sh
 
-function wait_for_server () {
+wait_for_server () {
 
-	server_host=$1
-	server_port=$2
-	sleep_seconds=5
+    server_host=$1
+    server_port=$2
+    sleep_seconds=5
 
-	while true; do
-	    echo -n "Checking $server_host $server_port status... "
+    while true; do
+        echo -n "Checking $server_host $server_port status... "
 
-	    nc -z "$server_host" "$server_port"
+        nc -z "$server_host" "$server_port"
 
-	    if [ "$?" -eq 0 ]; then
-	        echo "$server_host is running and ready to process requests."
-	        break
-	    fi
+        if [ "$?" -eq 0 ]; then
+            echo "$server_host is running and ready to process requests."
+            break
+        fi
 
-	    echo "$server_host is warming up. Trying again in $sleep_seconds seconds..."
-	    sleep $sleep_seconds
-	done
+        echo "$server_host is warming up. Trying again in $sleep_seconds seconds..."
+        sleep $sleep_seconds
+    done
 }
 
-if ! hash curl &> /dev/null || ! hash su-exec &> /dev/null; then
-	apk --no-cache add su-exec curl
+chmod 755 /opt
+
+if ! hash curl > /dev/null 2>&1 || ! hash gosu > /dev/null 2>&1 || ! hash nc > /dev/null 2>&1 || ! hash psql > /dev/null 2>&1 ; then
+    apt update && apt install -y gosu curl netcat postgresql-client
 fi
 
-if ! id osrm &> /dev/null; then
-	adduser -D osrm &> /dev/null
+if ! id osrm > /dev/null 2>&1 ; then
+    useradd --create-home osrm &> /dev/null
 fi
 
-. /data/config.sh
+if ! id postgres > /dev/null 2>&1 ; then
+    useradd --create-home postgres &> /dev/null
+fi
+
+if ! id osm > /dev/null 2>&1 ; then
+    useradd --create-home osm &> /dev/null
+fi
+
+if [ -f /usr/local/etc/osm-config.sh ]; then
+    . /usr/local/etc/osm-config.sh
+fi
 
 : ${PROFILE:=/opt/car.lua}
 : ${PROFILE_DIR:=$(basename "$PROFILE" .lua)}
@@ -40,27 +52,27 @@ export PROFILE PROFILE_DIR OSM_OSRM
 wait_for_server renderd 7653
 
 if [ "$REDOWNLOAD" -o ! -f /data/"$OSM_PBF" -a "$OSM_PBF_URL" ]; then
-	su-exec osrm curl -L -z /data/"$OSM_PBF" -o /data/"$OSM_PBF" "$OSM_PBF_URL"
-	su-exec osrm curl -L -z /data/"$OSM_PBF".md5 -o /data/"$OSM_PBF".md5 "$OSM_PBF_URL".md5
-	cd /data && \
-		su-exec osrm md5sum -c "$OSM_PBF".md5 || exit 1
+    gosu osrm curl -L -z /data/"$OSM_PBF" -o /data/"$OSM_PBF" "$OSM_PBF_URL"
+    gosu osrm curl -L -z /data/"$OSM_PBF".md5 -o /data/"$OSM_PBF".md5 "$OSM_PBF_URL".md5
+    cd /data && \
+        gosu osrm md5sum -c "$OSM_PBF".md5 || exit 1
 fi
 
 if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OSRM" ]; then
-	if [ ! -d /data/"$PROFILE_DIR" ]; then
-		su-exec osrm mkdir -p /data/profile/"$PROFILE_DIR"
-	fi
-	su-exec osrm osrm-extract -p "$PROFILE" -t "$NPROCS" /data/"$OSM_PBF" && \
-		su-exec osrm osrm-partition "$OSM_OSRM" && \
-		su-exec osrm osrm-customize "$OSM_OSRM" && \
-		mv /data/"$OSM_PBF".osrm* /data/profile/"$PROFILE_DIR"
+    if [ ! -d /data/"$PROFILE_DIR" ]; then
+        gosu osrm mkdir -p /data/profile/"$PROFILE_DIR"
+    fi
+    gosu osrm osrm-extract -p "$PROFILE" /data/"$OSM_PBF" && \
+        gosu osrm osrm-partition /data/"$OSM_OSRM" && \
+        gosu osrm osrm-customize /data/"$OSM_OSRM" && \
+        mv /data/"$OSM_OSRM"* /data/profile/"$PROFILE_DIR"
 fi
 
 cd /
 
-if [ "$@" ]; then
-	exec "$@"
+if [ "$#" -gt 0 ]; then
+    exec "$@"
 fi
 
-exec su-exec osrm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
+exec gosu osrm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
 
