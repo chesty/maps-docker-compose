@@ -14,7 +14,7 @@
 @define('CONST_Default_Lat', -24.9932483);
 @define('CONST_Default_Lon', 115.2323916);
 @define('CONST_Default_Zoom', 4);
-@define('CONST_Map_Tile_URL', 'http://renderd.internal.kkts.com.au/osm_tiles/{z}/{x}/{y}.png');
+@define('CONST_Map_Tile_URL', 'http://maps.localnet:8082/osm_tiles/{z}/{x}/{y}.png');
 @define('CONST_Map_Tile_Attribution', 'hammer'); // Set if tile source isn't osm.org
 
 @define('CONST_Log_File', '/data/nominatim/mominatim.log');
