@@ -58,6 +58,16 @@ if [ "$REDOWNLOAD" -o ! -f /data/"$OSM_PBF" -a "$OSM_PBF_URL" ]; then
         gosu osrm md5sum -c "$OSM_PBF".md5 || exit 1
 fi
 
+# detect if binaries are a different version to the ones used to process the previous osm files,
+# and reprocess if they are different.
+if [ -f /data/osrm.version ]; then
+    if [ "`osrm-extract -v`" != "`cat /data/osrm.version`" ]; then
+        REEXTRACT=1
+    fi
+else
+    REEXTRACT=1
+fi
+
 if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OSRM" ]; then
     if [ ! -d /data/"$PROFILE_DIR" ]; then
         gosu osrm mkdir -p /data/profile/"$PROFILE_DIR"
@@ -65,7 +75,8 @@ if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OS
     gosu osrm osrm-extract -p "$PROFILE" /data/"$OSM_PBF" && \
         gosu osrm osrm-partition /data/"$OSM_OSRM" && \
         gosu osrm osrm-customize /data/"$OSM_OSRM" && \
-        mv /data/"$OSM_OSRM"* /data/profile/"$PROFILE_DIR"
+        mv /data/"$OSM_OSRM"* /data/profile/"$PROFILE_DIR" && \
+        osrm-extract -v > /data/osrm.version
 fi
 
 cd /
