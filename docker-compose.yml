@@ -221,4 +221,3 @@ volumes:
   data:
   postgres-data:
   run:
-  nominatim-build:
