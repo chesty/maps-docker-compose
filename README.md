@@ -12,10 +12,13 @@ You'll want to edit the following files
 After running `docker-compose up -d` depending on what pbf you've configured to import,
 it will download 400G or more, then process/import/setup. It might take an hour or longer
 depending on how fast your internet and server is. After it finishes importing, 
-`renderd-initdb` and `nominatim-initdb` will exit 0. Stopping the containers in the middle 
-of an import might break things when you go to start the conatiners again. You can fix it
-by downing the containers and upping them with `REINITDB=1 REEXTRACT=1 docker-compose up -d` or
-if the pbf is partially downloaded  `REDOWNLOAD=1 docker-compose up -d`
+`renderd-initdb` and `nominatim-initdb` will exit 0. 
+
+You can keep everything updated by running daily `docker-compose start renderd-updatedb` and 
+`docker-compose start nominatim-updatedb`
+
+The osrm-backend container will detect if the binary gets updated with a `docker-compose pull` and regenerate the 
+osrm files.
 
 If you `grep -r maps.localnet *` in the `maps-docker-compose` directory, you'll see every file 
 you'll need to edit if you want to assign a domain name. Otherwise for testing you can edit

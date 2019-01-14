@@ -36,11 +36,34 @@ services:
       - /run
       - /tmp
 
+  renderd-updatedb:
+    image: hammermc/renderd-docker
+    restart: "no"
+    depends_on:
+      - postgres
+      - renderd-initdb
+    env_file:
+      - osm.env
+    environment:
+      - REDOWNLOAD
+      - REINITDB
+      - http_proxy
+      - https_proxy
+    command: renderd-updatedb
+    volumes:
+      - data:/data
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+    tmpfs:
+      - /run
+      - /tmp
+
   renderd:
     image: hammermc/renderd-docker
     restart: always
     depends_on:
       - postgres
+      - renderd-initdb
+      - renderd-updatedb
     env_file:
       - osm.env
     environment:

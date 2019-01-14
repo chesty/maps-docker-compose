@@ -62,6 +62,7 @@ fi
 # and reprocess if they are different.
 if [ -f /data/osrm.version ]; then
     if [ "`osrm-extract -v`" != "`cat /data/osrm.version`" ]; then
+        echo "different osrm binary version detected, reprocessing osm files"
         REEXTRACT=1
     fi
 else
@@ -69,6 +70,7 @@ else
 fi
 
 if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OSRM" ]; then
+    echo "reprocessing osrm files"
     if [ ! -d /data/"$PROFILE_DIR" ]; then
         gosu osrm mkdir -p /data/profile/"$PROFILE_DIR"
     fi
