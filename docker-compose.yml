@@ -41,7 +41,6 @@ services:
     restart: "no"
     depends_on:
       - postgres
-      - renderd-initdb
     env_file:
       - osm.env
     environment:
