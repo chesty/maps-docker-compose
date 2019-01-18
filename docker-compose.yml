@@ -180,6 +180,7 @@ services:
       - run:/run
       - ./nominatim-apache/000-default.conf:/etc/apache2/sites-available/000-default.conf
       - ./nominatim-apache/local.php:/Nominatim/build/settings/local.php
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /tmp
     ports:
