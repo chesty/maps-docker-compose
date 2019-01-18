@@ -205,6 +205,7 @@ services:
       - data:/data
       - run:/run
       - ./osm-config.sh:/usr/local/etc/osm-config.sh
+      - ./nominatim-apache/local.php:/Nominatim/build/settings/local.php
     tmpfs:
       - /tmp
 
@@ -221,6 +222,7 @@ services:
       - data:/data
       - run:/run
       - ./osm-config.sh:/usr/local/etc/osm-config.sh
+      - ./nominatim-apache/local.php:/Nominatim/build/settings/local.php
     tmpfs:
       - /tmp
 
