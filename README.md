@@ -1,9 +1,10 @@
 # maps-docker-compose
 
 It should init into a working OpenStreetMap server with tiles, osrm and vroom, and nominatim.
-You'll want to edit the following files 
+You'll want to edit the following files: 
 
-- `postgres/postgresql.conf` with suitable values for your server
+- `postgres/postgresql.conf` out of the box it's set for a system with about 16GB 
+ram and 4 cores. Check out https://pgtune.leopard.in.ua/#/ to get better starting values for your system
 - `osm.env` with the pbf you want to import
 - `osm-config.sh` 
 - `osrm-frontend/leaflet_options.js` 
