@@ -204,6 +204,7 @@ services:
     volumes:
       - data:/data
       - run:/run
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /tmp
 
@@ -219,6 +220,7 @@ services:
     volumes:
       - data:/data
       - run:/run
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /tmp
 
