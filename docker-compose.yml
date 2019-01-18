@@ -13,8 +13,6 @@ services:
       - run:/run
     tmpfs:
       - /tmp
-    ports:
-      - 5432:5432
 
   renderd-initdb:
     image: hammermc/renderd-docker
@@ -80,13 +78,13 @@ services:
   renderd-apache:
     image: hammermc/renderd-docker
     restart: always
+    depends_on:
+      - renderd
     env_file:
       - osm.env
     environment:
       - http_proxy
       - https_proxy
-    depends_on:
-      - renderd
     command: renderd-apache2
     volumes:
       - data:/data
@@ -104,7 +102,9 @@ services:
     restart: always
 #    to run osrm-routed with different options to the default, use (eg)
 #   command: osrm-routed.sh su-exec osrm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
-    command: osrm-routed.sh
+    depends_on:
+      - postgres
+      - renderd
     env_file:
       - osm.env
     environment:
@@ -114,9 +114,7 @@ services:
       - PROFILE
       - REDOWNLOAD
       - REEXTRACT
-    depends_on:
-      - postgres
-      - renderd
+    command: osrm-routed.sh
     volumes:
       - data:/data
       - ./osrm-backend/osrm-routed.sh:/usr/local/bin/osrm-routed.sh
@@ -132,14 +130,14 @@ services:
   osrm-frontend:
     image: osrm/osrm-frontend
     restart: always
-    command: osrm-frontend.sh
+    depends_on:
+      - osrm-backend
     env_file:
       - osm.env
     environment:
       - http_proxy
       - https_proxy
-    depends_on:
-      - osrm-backend
+    command: osrm-frontend.sh
     volumes:
       - data:/data
       - ./osrm-frontend/osrm-frontend.sh:/usr/local/bin/osrm-frontend.sh
@@ -167,6 +165,10 @@ services:
   nominatim-apache:
     image: hammermc/nominatim-docker
     restart: always
+    depends_on:
+      - nominatim-initdb
+      - nominatim-updatedb
+      - postgres
     env_file:
       - osm.env
     environment:
@@ -180,9 +182,6 @@ services:
       - ./nominatim-apache/local.php:/Nominatim/build/settings/local.php
     tmpfs:
       - /tmp
-    depends_on:
-      - nominatim-initdb
-      - nominatim-updatedb
     ports:
       - 5003:80
 
@@ -191,7 +190,8 @@ services:
   nominatim-initdb:
     image: hammermc/nominatim-docker
     restart: "no"
-    command: nominatim-initdb
+    depends_on:
+      - postgres
     env_file:
       - osm.env
     environment:
@@ -199,45 +199,44 @@ services:
       - REINITDB
       - http_proxy
       - https_proxy
+    command: nominatim-initdb
     volumes:
       - data:/data
       - run:/run
     tmpfs:
       - /tmp
-    depends_on:
-      - postgres
 
 #  edit apache/local.php for correct update settings
   nominatim-updatedb:
     image: hammermc/nominatim-docker
     restart: "no"
-    command: nominatim-updatedb
+    depends_on:
+      - postgres
     env_file:
       - osm.env
+    command: nominatim-updatedb
     volumes:
       - data:/data
       - run:/run
     tmpfs:
       - /tmp
-    depends_on:
-      - postgres
 
   nginx:
     image: nginx
     restart: always
-    volumes:
-     - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-    command: nginx -g 'daemon off;'
-    ports:
-     - 8000:80
-    tmpfs:
-      - /tmp
-      - /run
     depends_on:
       - osrm-frontend
       - osrm-backend
       - nominatim-apache
       - vroom
+    command: nginx -g 'daemon off;'
+    volumes:
+     - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+     - 8000:80
+    tmpfs:
+      - /tmp
+      - /run
 
 volumes:
   data:
