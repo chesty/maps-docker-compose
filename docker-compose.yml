@@ -1,4 +1,4 @@
-version: '2.2'
+version: '3.7'
 
 services:
   postgres:
@@ -16,7 +16,7 @@ services:
 
   renderd-initdb:
     image: hammermc/renderd-docker
-    restart: "no"
+    restart: on-failure
     depends_on:
       - postgres
     env_file:
@@ -36,7 +36,7 @@ services:
 
   renderd-updatedb:
     image: hammermc/renderd-docker
-    restart: "no"
+    restart: unless-stopped
     depends_on:
       - postgres
     env_file:
@@ -190,7 +190,7 @@ services:
 # because it only connects to postgres via a socket during import
   nominatim-initdb:
     image: hammermc/nominatim-docker
-    restart: "no"
+    restart: on-failure
     depends_on:
       - postgres
     env_file:
@@ -212,7 +212,7 @@ services:
 #  edit apache/local.php for correct update settings
   nominatim-updatedb:
     image: hammermc/nominatim-docker
-    restart: "no"
+    restart: unless-stopped
     depends_on:
       - postgres
     env_file:
