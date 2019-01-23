@@ -13,10 +13,12 @@ in this project, so you can use it as a hook to set up your containers however y
 - `nginx/default.conf` will likely need to be tweaked.
 
 After running `docker-compose up -d` depending on what pbf you've configured to import,
-it will download 400M or more, then process/import/setup. It might take many hours
+it will download a gigabyte or more, then process/import/setup. It might take many hours
 depending on how fast your internet and server is. After it finishes importing, 
-`renderd-initdb`, `nominatim-initdb` and `renderd-updatedb` will exit 0. Once a day you can run 
-`docker-compose run renderd-updatedb renderd-updatedb` to keep the tile server up to date.
+`renderd-initdb` and `nominatim-initdb` will exit 0. If the *-initdb containers error and exit > 0, they will
+retry 3 times then sleep for 3 hours, if they fail again, they will sleep for 4 hours, then 5 hours,
+etc. This is because of the large files they need to download and to stop them from hammering the servers
+hosting the large files.
  
 The osrm-backend container will detect if the binary gets updated with a `docker-compose pull` and regenerate the 
 osrm files.
