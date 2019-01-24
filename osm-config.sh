@@ -1,5 +1,9 @@
 #!/bin/sh
 
+alias print_time="date --iso-8601=seconds"
+
+echo $0 called at `print_time`
+
 : ${NPROCS:=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)}
 : ${OSM_PBF:=$(basename "$OSM_PBF_URL")}
 : ${OSM_PBF_BASENAME:=$(basename "$OSM_PBF" .osm.pbf)}
