@@ -10,6 +10,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
       - run:/run
     tmpfs:
       - /tmp

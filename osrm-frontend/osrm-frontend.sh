@@ -1,5 +1,18 @@
 #!/bin/sh
 
+set -e
+
+if [ -f /usr/local/etc/osm-config.sh ]; then
+    . /usr/local/etc/osm-config.sh
+else
+    log () {
+        echo -n `date "+%Y-%m-%d %H:%M:%S+%Z"` "-- $0: $@"
+    }
+    log "/usr/local/etc/osm-config.sh not found, $0 is probably going to error and exit"
+fi
+
+log starting
+
 if ! hash curl &> /dev/null || ! hash su-exec &> /dev/null; then
 	apk --no-cache add curl su-exec
 fi

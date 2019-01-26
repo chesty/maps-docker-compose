@@ -1,11 +1,19 @@
 #!/bin/sh
 
-alias log="echo " $@ "`date --iso-8601=seconds` -- $0: "
+log () {
+    if [ "$1" = "-n" ]; then
+        shift
+        echo -n `date "+%Y-%m-%d %H:%M:%S+%Z"` "-- $0: $@"
+    else
+        echo `date "+%Y-%m-%d %H:%M:%S+%Z"` "-- $0: $@"
+    fi
+}
+
 log_env () {
     log `env | grep -v PASSWORD`
 }
 
-log starting
+log "osm-comfig.sh starting"
 
 : ${NPROCS:=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)}
 : ${OSM_PBF:=$(basename "$OSM_PBF_URL")}
