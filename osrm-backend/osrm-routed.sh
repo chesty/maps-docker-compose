@@ -31,7 +31,7 @@ wait_for_server () {
             continue
         }
 
-        log "$server_host is running and ready to process requests"
+        echo "$server_host is running and ready to process requests"
         return 0
     done
 }
@@ -102,7 +102,7 @@ if [ "$REDOWNLOAD" -o ! -f /data/"$OSM_PBF" -a "$OSM_PBF_URL" ]; then
         log "error downloading ${OSM_PBF_URL}.md5, exit 9"; exit 9; }
     ( cd /data && \
         gosu osm md5sum -c "$OSM_PBF".md5 ) || {
-            rm -f /data/"$OSM_PBF".md5 /data/"$OSM_PBF"
+            rm -f /data/"$OSM_PBF".md5 /data/"$OSM_PBF" /data/osmosis/state.txt
             log "md5sum mismatch on /data/$OSM_PBF, exit 4"
             exit 4
         }
@@ -111,13 +111,12 @@ fi
 
 # detect if binaries are a different version to the ones used to process the previous osm files,
 # and reprocess if they are different.
-if [ -f /data/osrm.version ]; then
-    if [ "`osrm-extract -v`" != "`cat /data/osrm.version`" ]; then
+: ${OSRM_ALGORITHM:="MLD"}
+if [ -f /data/profile/"$PROFILE_DIR"/"$OSM_OSRM" ]; then
+    if ! gosu osm osrm-routed --algorithm "$OSRM_ALGORITHM" --trial=yes /data/profile/"$PROFILE_DIR"/"$OSM_OSRM" >/dev/null; then
         log "detected processed osrm files are a different version to the osrm binary, reprocessing"
         REEXTRACT=1
     fi
-else
-    REEXTRACT=1
 fi
 
 if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OSRM" ]; then
@@ -127,8 +126,8 @@ if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f /data/profile/"$PROFILE_DIR"/"$OSM_OS
     fi
     ( cd /data && \
         gosu osm osrm-extract -p "$PROFILE" /data/"$OSM_PBF" && \
-        gosu osm osrm-partition /data/"$OSM_OSRM" && \
-        gosu osm osrm-customize /data/"$OSM_OSRM" && \
+        gosu osm osrm-partition -t "$NPROCS" /data/"$OSM_OSRM" && \
+        gosu osm osrm-customize -t "$NPROCS" /data/"$OSM_OSRM" && \
         mv /data/"$OSM_OSRM"* /data/profile/"$PROFILE_DIR" && \
         osrm-extract -v > /data/osrm.version || {
             rm -f /data/"$OSM_OSRM"* /data/osrm.version
@@ -140,10 +139,9 @@ fi
 
 cd /
 rm -f /data/osrm-routed.lock
+log "initalised successfully"
 
 if [ "$#" -gt 0 ]; then
     exec "$@"
 fi
-
-log "initalised successfully"
-exec gosu osm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
+exec gosu osm osrm-routed -t "$NPROCS" --algorithm "$OSRM_ALGORITHM" /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
