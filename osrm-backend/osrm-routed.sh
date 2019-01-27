@@ -5,7 +5,9 @@ set -e
 if [ -f /usr/local/etc/osm-config.sh ]; then
     . /usr/local/etc/osm-config.sh
 else
-    alias log="echo `date --iso-8601=seconds` -- $0: "
+    log () {
+            echo `date "+%Y-%m-%d %H:%M:%S+%Z"` "-- $0: $@"
+    }
     log "/usr/local/etc/osm-config.sh not found, $0 is probably going to error and exit"
 fi
 
