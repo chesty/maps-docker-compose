@@ -59,20 +59,34 @@ export PROFILE PROFILE_DIR OSM_OSRM
 
 log_env
 
-if [ -f /data/osrm-routed.lock ]; then
-    log "detected previous run exited with errors, rerunning"
-    REDOWNLOAD=1
-    eval `grep "reinitcount=[0-9]\+" /data/osrm-routed.lock`
-    reinitcount=$(( $reinitcount + 1 ))
-    echo "reinitcount=$reinitcount" > /data/osrm-routed.lock
-    if [ "$reinitcount" -gt 2 ]; then
-        log "failed $reinitcount times before, sleeping for $(( $reinitcount * 3600 )) seconds"
-        sleep $(( $reinitcount * 3600 ))
+check_lockfile () {
+    if [ -z "$1" ]; then
+        log "check_lockfile <lockfile> [log prefix]"
+        return 0
     fi
-else
-    echo "reinitcount=0" > /data/osrm-routed.lock
-    eval `grep "reinitcount=[0-9]\+" /data/osrm-routed.lock`
-fi
+    LOCKFILE="$1"
+
+    if [ -f "$LOCKFILE" ]; then
+      log "$2 detected previous run didn't finish successfully, rerunning"
+        eval `grep "restartcount=[0-9]\+" "$LOCKFILE"`
+        restartcount=$(( $restartcount + 1 ))
+        if [ "$restartcount" -gt 2 ]; then
+            if [ "$restartcount" -gt 24 ]; then
+                restartcount=24
+            fi
+            log "$2 has failed $restartcount times before, sleeping for $(( $restartcount * 3600 )) seconds"
+            sleep $(( $restartcount * 3600 ))
+        fi
+        echo "restartcount=$restartcount" > "$LOCKFILE"
+        return 1
+    fi
+
+    echo "restartcount=0" > "$LOCKFILE"
+    eval `grep "restartcount=[0-9]\+" "$LOCKFILE"`
+    return 0
+}
+
+check_lockfile /data/osrm-routed.lock "$0" || REDOWNLOAD=1
 
 # mainly so 2 containers aren't trying to download the pbf at the same time.
 wait_for_server renderd 7653
