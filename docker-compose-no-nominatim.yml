@@ -1,0 +1,185 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: hammermc/nominatim-docker
+    restart: always
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    env_file:
+      - osm.env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+      - run:/run
+    tmpfs:
+      - /tmp
+
+  renderd-initdb:
+    image: hammermc/renderd-docker
+    restart: on-failure
+    depends_on:
+      - postgres
+    env_file:
+      - osm.env
+    environment:
+      - REDOWNLOAD
+      - REINITDB
+      - http_proxy
+      - https_proxy
+    command: renderd-initdb
+    volumes:
+      - data:/data
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+    tmpfs:
+      - /run
+      - /tmp
+
+  renderd-updatedb:
+    image: hammermc/renderd-docker
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file:
+      - osm.env
+    environment:
+      - REDOWNLOAD
+      - REINITDB
+      - http_proxy
+      - https_proxy
+    command: renderd-updatedb
+    volumes:
+      - data:/data
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+    tmpfs:
+      - /run
+      - /tmp
+
+  renderd:
+    image: hammermc/renderd-docker
+    restart: always
+    depends_on:
+      - postgres
+      - renderd-initdb
+      - renderd-updatedb
+    env_file:
+      - osm.env
+    environment:
+      - http_proxy
+      - https_proxy
+    command: renderd
+    volumes:
+      - data:/data
+      - ./renderd/renderd.conf:/etc/renderd.conf
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+    tmpfs:
+      - /run
+      - /tmp
+
+  renderd-apache:
+    image: hammermc/renderd-docker
+    restart: always
+    depends_on:
+      - renderd
+    env_file:
+      - osm.env
+    environment:
+      - http_proxy
+      - https_proxy
+    command: renderd-apache2
+    volumes:
+      - data:/data
+      - ./renderd/renderd.conf:/etc/renderd.conf
+      - ./renderd-apache/tileserver_site.conf:/etc/apache2/sites-available/tileserver_site.conf
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 8082:80
+
+  osrm-backend:
+    image: hammermc/vroom-docker
+    restart: always
+#    to run osrm-routed with different options to the default, use (eg)
+#   command: osrm-routed.sh su-exec osrm osrm-routed -t "$NPROCS" --algorithm mld /data/profile/"$PROFILE_DIR"/"$OSM_OSRM"
+    depends_on:
+      - postgres
+      - renderd
+    env_file:
+      - osm.env
+    environment:
+      - http_proxy
+      - https_proxy
+      - NPROCS
+      - PROFILE
+      - REDOWNLOAD
+      - REEXTRACT
+    command: osrm-routed.sh
+    volumes:
+      - data:/data
+      - ./osrm-backend/osrm-routed.sh:/usr/local/bin/osrm-routed.sh
+      - ./osrm-backend/opt/car.lua:/opt/car.lua
+      - ./osrm-backend/opt/lib:/opt/lib
+      - ./osm-config.sh:/usr/local/etc/osm-config.sh
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 5000:5000
+
+  osrm-frontend:
+    image: osrm/osrm-frontend
+    restart: always
+    depends_on:
+      - osrm-backend
+    env_file:
+      - osm.env
+    environment:
+      - http_proxy
+      - https_proxy
+    command: osrm-frontend.sh
+    volumes:
+      - data:/data
+      - ./osrm-frontend/osrm-frontend.sh:/usr/local/bin/osrm-frontend.sh
+      - ./osrm-frontend/leaflet_options.js:/src/src/leaflet_options.js
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 5002:9966
+
+  vroom:
+    image: hammermc/vroom-docker
+    env_file:
+      - osm.env
+    environment:
+      - http_proxy
+      - https_proxy
+    restart: always
+    tmpfs:
+      - /run
+      - /tmp
+    ports:
+      - 3000:3000
+
+  nginx:
+    image: nginx
+    restart: always
+    depends_on:
+      - osrm-frontend
+      - osrm-backend
+      - vroom
+    command: nginx -g 'daemon off;'
+    volumes:
+     - ./nginx-no-nominatim/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+     - 8000:80
+    tmpfs:
+      - /tmp
+      - /run
+
+volumes:
+  data:
+  postgres-data:
+  run:
