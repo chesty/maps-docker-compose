@@ -13,7 +13,7 @@ In `osm-config.sh` NPROCS sets the number of cores to use by various processes,
 it's set to use all cores by default. You can add (eg) `NPROCS=2` to osm.env to 
 set them to use 2 cores. It's not the total number of cores all the processes in the
 various containers can use added up together, it sets various processes to NPROCS
-cores and those various processes could run a the same time.
+cores and those various processes could run at the same time.
 
 osm-config.sh is run at the beginning of all containers in this project. You can
 add shells scripts with a file extension of .sh to the directory /osm-config.d 
@@ -21,7 +21,7 @@ to be sourced by osm-config.sh to setup or extend the container however you like
 
 Edit `osrm-frontend/leaflet_options.js` to set things like the starting geo coords and zoom.  
 
-`nginx/default.conf` will likely need to be tweaked.
+`nginx/default.conf` will likely need to be tweaked but works for me out of the box.
 
 After running `docker-compose up -d` depending on what pbf you've configured to import,
 it will download a gigabyte or more, then process/import/setup. It might take many hours
@@ -31,7 +31,7 @@ to setup just the tile and routing services which takes me under an hour for the
  
 After it finishes importing, `renderd-initdb` and `nominatim-initdb` will exit 0. 
 If the *-initdb containers error and exit > 0, they will retry 3 times then sleep for 
-3 hours, if they fail again, they will sleep for 3 hours, then 4 hours, etc. 
+3 hours, if they fail again, they will sleep for 4 hours, then 5 hours, etc. 
 This is because of the large files they need to download and to stop them from 
 potentially hammering the servers hosting the large files.
  
