@@ -7,7 +7,8 @@ ram and 4 cores. Check out https://pgtune.leopard.in.ua/#/ to get better startin
 for your system
 
 Edit `osm.env` with the pbf you want to import, I've only tested with geofabrik's files
-and server.
+and server. Basically I've only tested with the values supplied, for example I haven't 
+tested with a different POSTGRES_USER.
 
 In `osm-config.sh` NPROCS sets the number of cores to use by various processes, 
 it's set to use all cores by default. You can add (eg) `NPROCS=2` to osm.env to 
@@ -22,6 +23,8 @@ to be sourced by osm-config.sh to setup or extend the container however you like
 Edit `osrm-frontend/leaflet_options.js` to set things like the starting geo coords and zoom.  
 
 `nginx/default.conf` will likely need to be tweaked but works for me out of the box.
+
+You can add database index and other database changes by add a file 
 
 After running `docker-compose up -d` depending on what pbf you've configured to import,
 it will download a gigabyte or more, then process/import/setup. It might take many hours

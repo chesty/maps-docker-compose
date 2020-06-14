@@ -13,7 +13,7 @@ fi
 
 log starting
 
-if ! hash curl &> /dev/null || ! hash su-exec &> /dev/null; then
+if ! hash curl > /dev/null || ! hash su-exec > /dev/null; then
 	apk --no-cache add curl su-exec
 fi
 
@@ -25,8 +25,11 @@ if ! id osrm &> /dev/null; then
 	adduser -D osrm &> /dev/null
 fi
 
+cd /src/src && \
+  	patch < ../gelinger777-3683985.patch
+
 cd /src && \
-	chown -R osm /src && \
+	chown -R osm /src
 
 if [ "$#" -gt 0 ]; then
 	exec "$@"

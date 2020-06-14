@@ -1,7 +1,7 @@
 <?php
 
 @define('CONST_Log_File', '/Nominatim/build/logpipe');
-@define('CONST_Website_BaseURL', '/');
+@define('CONST_Website_BaseURL', '/nominatim/');
 
 // Replication settings
 @define('CONST_Replication_Url', 'http://download.geofabrik.de/australia-oceania/australia-updates/');
@@ -14,8 +14,10 @@
 @define('CONST_Default_Lat', -24.9932483);
 @define('CONST_Default_Lon', 115.2323916);
 @define('CONST_Default_Zoom', 4);
-@define('CONST_Map_Tile_URL', 'http://maps.localnet:8082/osm_tiles/{z}/{x}/{y}.png');
+@define('CONST_Map_Tile_URL', '/osm_tiles/{z}/{x}/{y}.png');
 @define('CONST_Map_Tile_Attribution', 'hammer'); // Set if tile source isn't osm.org
+
+// @define('CONST_Osm2pgsql_Flatnode_File', '/tmp/flatnode.file');
 
 // if you put your postgres password here, nominatim-apache doesn't need to share the run volume with postgres
 // @define('CONST_Database_DSN', 'pgsql://postgres:supersecret@postgres/nominatim');

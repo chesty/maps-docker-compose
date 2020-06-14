@@ -8,6 +8,7 @@ services:
     env_file:
       - osm.env
     volumes:
+      - data:/data
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./osm-config.sh:/usr/local/etc/osm-config.sh
@@ -95,8 +96,8 @@ services:
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 8082:80
+#    ports:
+#      - 8082:80
 
   osrm-backend:
     image: hammermc/vroom-docker
@@ -125,8 +126,8 @@ services:
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 5000:5000
+#    ports:
+#      - 5000:5000
 
   osrm-frontend:
     image: osrm/osrm-frontend
@@ -143,11 +144,12 @@ services:
       - data:/data
       - ./osrm-frontend/osrm-frontend.sh:/usr/local/bin/osrm-frontend.sh
       - ./osrm-frontend/leaflet_options.js:/src/src/leaflet_options.js
+      - ./osrm-frontend/gelinger777-3683985.patch:/src/gelinger777-3683985.patch
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 5002:9966
+#    ports:
+#      - 5002:9966
 
   vroom:
     image: hammermc/vroom-docker
@@ -160,8 +162,8 @@ services:
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 3000:3000
+#    ports:
+#      - 3000:3000
 
   nominatim-apache:
     image: hammermc/nominatim-docker
@@ -184,8 +186,8 @@ services:
       - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /tmp
-    ports:
-      - 5003:80
+#    ports:
+#      - 5003:80
 
 # nominatim shares the /run directory with the postgres container
 # because it only connects to postgres via a socket during import

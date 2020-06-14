@@ -2,8 +2,7 @@
 
 var L = require('leaflet');
 
-var streets = L.tileLayer('http://maps.localnet:8082/osm_tiles/{z}/{x}/{y}.png', {}),
-  small_components = L.tileLayer('https://tools.geofabrik.de/osmi/tiles/routing_i/{z}/{x}/{y}.png', {});
+var streets = L.tileLayer('/osm_tiles/{z}/{x}/{y}.png', {});
 
 module.exports = {
   defaultState: {
@@ -16,16 +15,18 @@ module.exports = {
   },
   services: [{
     label: 'Car (fastest)',
-    path: 'http://maps.localnet:5000/route/v1'
+    path: '/osrm-backend/route/v1'
   }],
   layer: [{
     'Mapbox Streets': streets
   }],
-  overlay: {
-    'Small Components': small_components
-  },
   baselayer: {
     one: streets
+  },
+  // change the url to //nominatim.openstreetmap.org/ if you're not running a local nominatim server
+  // or add a reverse proxy setting to nginx/default.conf for /nominatim/
+  nominatim: {
+    url: '/nominatim/'
   }
 };
 
