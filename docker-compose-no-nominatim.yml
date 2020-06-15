@@ -142,7 +142,7 @@ services:
     volumes:
       - data:/data
       - ./osrm-frontend/osrm-frontend.sh:/usr/local/bin/osrm-frontend.sh
-      - ./osrm-frontend/leaflet_options.js:/src/src/leaflet_options.js
+      - ./osrm-frontend/leaflet_options-no-nominatim.js:/src/src/leaflet_options.js
     tmpfs:
       - /run
       - /tmp

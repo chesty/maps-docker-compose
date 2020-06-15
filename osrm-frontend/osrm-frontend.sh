@@ -26,7 +26,8 @@ if ! id osrm &> /dev/null; then
 fi
 
 cd /src/src && \
-  	patch < ../gelinger777-3683985.patch
+  grep -q "leafletOptions.nominatim.url" index.js || \
+    patch < ../gelinger777-3683985.patch
 
 cd /src && \
 	chown -R osm /src
