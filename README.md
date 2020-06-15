@@ -2,6 +2,11 @@
 
 It should init into a working OpenStreetMap server with tiles, osrm and vroom, and nominatim.
 
+Everything goes through nginx on port 8000 out of the box,
+so if you point your browser at :8000 you'll hit osrm-frontend,
+and it will use your local nominatim server for reverse geocoding
+and osrm-backend for routing.
+
 The file `postgres/postgresql.conf` out of the box is set for a system with about 16GB 
 ram and 4 cores. Check out https://pgtune.leopard.in.ua/#/ to get better starting values 
 for your system
