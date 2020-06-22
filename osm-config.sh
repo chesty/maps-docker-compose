@@ -17,13 +17,23 @@ log "starting osm-config.sh"
 
 # these will only be set if they aren't already set
 : ${NPROCS:=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1)}
+: ${OSM_PBF_URL:="http://download.geofabrik.de/australia-oceania/australia-latest.osm.pbf"}
+: ${OSM_PBF_UPDATE_URL:="http://download.geofabrik.de/australia-oceania/australia-updates"}
 : ${OSM_PBF:=$(basename "$OSM_PBF_URL")}
 : ${OSM_PBF_BASENAME:=$(basename "$OSM_PBF" .osm.pbf)}
 : ${OSM_OSRM:="$OSM_PBF_BASENAME".osrm}
-: ${OSRM_ALGORITHM:=MLD}
-: ${DATA_DIR:=/data}
+: ${OSM2PGSQLCACHE:="2000"}
+: ${POSTGRES_PASSWORD:="supersecret"}
+: ${POSTGRES_HOST:="postgres"}
+: ${POSTGRES_USER:="postgres"}
+: ${POSTGRES_DB:="gis"}
+: ${POSTGRES_PORT:="5432"}
+: ${WFS_SLEEP:="30"}
+: ${RENDERD_UPDATE_SLEEP:="86400"}
 
-export NPROCS OSM_PBF OSM_PBF_BASENAME OSM_OSRM DATA_DIR OSRM_ALGORITHM
+export NPROCS OSM_PBF_URL OSM_PBF_UPDATE_URL OSM_PBF OSM_PBF_BASENAME OSM_OSRM OSM_PBF OSM_PBF_BASENAME \
+  OSM2PGSQLCACHE POSTGRES_PASSWORD  POSTGRES_HOST POSTGRES_DB POSTGRES_PORT WFS_SLEEP \
+  RENDERD_UPDATE_SLEEP
 
 log_env
 
