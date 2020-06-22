@@ -29,7 +29,8 @@ Edit `osrm-frontend/leaflet_options.js` to set things like the starting geo coor
 
 `nginx/default.conf` will likely need to be tweaked but works for me out of the box.
 
-You can add database index and other database changes by add a file 
+You can add database index and other database changes by add a file in `/docker-entrypoint-initdb.d/` 
+in the postgres container 
 
 After running `docker-compose up -d` depending on what pbf you've configured to import,
 it will download a gigabyte or more, then process/import/setup. It might take many hours
@@ -43,13 +44,7 @@ If the *-initdb containers error and exit > 0, they will retry 3 times then slee
 This is because of the large files they need to download and to stop them from 
 potentially hammering the servers hosting the large files.
  
-The osrm-backend on container on startup will detect if the binary has updated with a 
+The osrm-backend container on startup will detect if the binary has updated with a 
 `docker-compose pull` and regenerate the osrm storage files.
 
-If you `grep -r maps.localnet *` in the `maps-docker-compose` directory, you'll see every file 
-you'll need to edit if you want to assign a domain name. Otherwise for testing you can edit
-your `/etc/hosts` file with (ie) `127.0.0.1 maps.localnet nominatim.maps.localnet` if your browser
-is on the same host as the docker containers. Then after it's finished starting up, you can in a 
-web browser browse to `http://maps.localnet:8000` and `http://nominatim.maps.localnet:8000`
-
-I'm happy to hear about any comments or issues, open an issue in github.
+I'm happy to hear about any comments or issues, open an issue in github please.
