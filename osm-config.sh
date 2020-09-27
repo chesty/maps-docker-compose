@@ -37,21 +37,27 @@ export NPROCS OSM_PBF_URL OSM_PBF_UPDATE_URL OSM_PBF OSM_PBF_BASENAME OSM_OSRM O
 
 log_env
 
-for U in osm osrm postgres root "$POSTGRES_USER"; do
+for U in osm osrm postgres root "$POSTGRES_USER" testuser; do
     if ! id "$U" >/dev/null 2>&1; then
         useradd -ms /bin/bash "$U"
     fi
 
-    if [ ! -f ~"$U"/.pgpass ]; then
-        if [ ! -d ~ ]; then
-            mkdir -p ~
-            chown "$U": ~
+    H=$(getent passwd "$U" | awk -F: '{print $6}')
+    
+    if [ -z "$H" ]; then
+        continue
+    fi
+
+    if [ ! -f "$H"/.pgpass ]; then
+        if [ ! -d "$H" ]; then
+            mkdir -p "$H" && \
+            chown "$U": "$H"
         fi
         (
-            eval cd ~"$U"
-            touch .pgpass
-            chown "$U": .pgpass
-            chmod 600 .pgpass
+            cd "$H" && \
+            touch .pgpass && \
+            chown "$U": .pgpass && \
+            chmod 600 .pgpass && \
             echo "$POSTGRES_HOST:$POSTGRES_PORT:*:$POSTGRES_USER:$POSTGRES_PASSWORD" >> .pgpass
         )
     fi

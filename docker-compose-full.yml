@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   postgres:
-    image: hammermc/nominatim-docker:12
+    image: hammermc/nominatim-docker:13
     restart: always
     command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     env_file:
@@ -166,7 +166,7 @@ services:
 #      - 3000:3000
 
   nominatim-apache:
-    image: hammermc/nominatim-docker:12
+    image: hammermc/nominatim-docker:13
     restart: always
     depends_on:
       - nominatim-initdb
@@ -192,7 +192,7 @@ services:
 # nominatim shares the /run directory with the postgres container
 # because it only connects to postgres via a socket during import
   nominatim-initdb:
-    image: hammermc/nominatim-docker:12
+    image: hammermc/nominatim-docker:13
     restart: on-failure
     depends_on:
       - postgres
@@ -214,7 +214,7 @@ services:
 
 #  edit apache/local.php for correct update settings
   nominatim-updatedb:
-    image: hammermc/nominatim-docker:12
+    image: hammermc/nominatim-docker:13
     restart: unless-stopped
     depends_on:
       - postgres
