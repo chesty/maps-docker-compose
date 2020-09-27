@@ -70,7 +70,7 @@ if [ "$REDOWNLOAD" -o "$REEXTRACT" -o ! -f "$FULLPATH_OSM_OSRM" ]; then
     gosu osm flock "$DATA_DIR/$OSM_PBF".lock true && rm -f "$DATA_DIR/$OSM_PBF".lock
 
     ( cd /data && \
-        gosu osm osrm-extract -p "$PROFILE" /data/"$OSM_PBF" && \
+        gosu osm osrm-extract -t "$NPROCS" -p "$PROFILE" /data/"$OSM_PBF" && \
         gosu osm osrm-partition -t "$NPROCS" /data/"$OSM_OSRM" && \
         gosu osm osrm-customize -t "$NPROCS" /data/"$OSM_OSRM" && \
         mv /data/"$OSM_OSRM"* /data/profile/"$PROFILE_DIR"  || {
