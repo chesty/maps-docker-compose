@@ -2,12 +2,14 @@ version: '3.7'
 
 services:
   postgres:
-    image: postgis/postgis:13-master
+    image: hammermc/nominatim-docker:13
     restart: always
     command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    stop_grace_period: 2m
     env_file:
       - osm.env
     volumes:
+      - data:/data
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./osm-config.sh:/usr/local/etc/osm-config.sh
@@ -90,13 +92,13 @@ services:
     volumes:
       - data:/data
       - ./renderd/renderd.conf:/etc/renderd.conf
-      - ./renderd-apache/tileserver_site.conf:/etc/apache2/sites-available/tileserver_site.conf
+      - ./renderd-apache/tileserver_site.conf:/etc/apache2/sites-enabled/renderd.conf
       - ./osm-config.sh:/usr/local/etc/osm-config.sh
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 8082:80
+#    ports:
+#      - 8082:80
 
   osrm-backend:
     image: hammermc/vroom-docker
@@ -125,8 +127,8 @@ services:
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 5000:5000
+#    ports:
+#      - 5000:5000
 
   osrm-frontend:
     image: osrm/osrm-frontend
@@ -143,11 +145,12 @@ services:
       - data:/data
       - ./osrm-frontend/osrm-frontend.sh:/usr/local/bin/osrm-frontend.sh
       - ./osrm-frontend/leaflet_options-no-nominatim.js:/src/src/leaflet_options.js
+      - ./osrm-frontend/gelinger777-3683985.patch:/src/gelinger777-3683985.patch
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 5002:9966
+#    ports:
+#      - 5002:9966
 
   vroom:
     image: hammermc/vroom-docker
@@ -160,8 +163,8 @@ services:
     tmpfs:
       - /run
       - /tmp
-    ports:
-      - 3000:3000
+#    ports:
+#      - 3000:3000
 
   nginx:
     image: nginx
