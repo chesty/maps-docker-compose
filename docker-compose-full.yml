@@ -3,6 +3,7 @@ version: '3.7'
 services:
   postgres:
     image: hammermc/nominatim-docker:13
+    shm_size: 256M
     restart: always
     command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     stop_grace_period: 2m
@@ -19,6 +20,7 @@ services:
 
   renderd-initdb:
     image: hammermc/renderd-docker
+    shm_size: 256M
     restart: on-failure
     depends_on:
       - postgres
@@ -39,6 +41,7 @@ services:
 
   renderd-updatedb:
     image: hammermc/renderd-docker
+    shm_size: 256M
     restart: unless-stopped
     depends_on:
       - postgres
@@ -59,6 +62,7 @@ services:
 
   renderd:
     image: hammermc/renderd-docker
+    shm_size: 256M
     restart: always
     depends_on:
       - postgres
@@ -80,6 +84,7 @@ services:
 
   renderd-apache:
     image: hammermc/renderd-docker
+    shm_size: 256M
     restart: always
     depends_on:
       - renderd
@@ -168,6 +173,7 @@ services:
 
   nominatim-apache:
     image: hammermc/nominatim-docker:13
+    shm_size: 256M
     restart: always
     depends_on:
       - nominatim-initdb
@@ -194,6 +200,7 @@ services:
 # because it only connects to postgres via a socket during import
   nominatim-initdb:
     image: hammermc/nominatim-docker:13
+    shm_size: 256M
     restart: on-failure
     depends_on:
       - postgres
@@ -216,6 +223,7 @@ services:
 #  edit apache/local.php for correct update settings
   nominatim-updatedb:
     image: hammermc/nominatim-docker:13
+    shm_size: 256M
     restart: unless-stopped
     depends_on:
       - postgres
